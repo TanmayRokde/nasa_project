@@ -1,9 +1,9 @@
-const {getAllLaunches,addNewLaunch,ifLaunchExists, abortedLaunch} = require('../../models/launches.models')
+const {getAllLaunches,saveNewLaunch,ifLaunchExists, abortedLaunch} = require('../../models/launches.models')
 
-function httpgetAllLaunches(req, res) {
-    return res.status(200).json(getAllLaunches());
+async function httpgetAllLaunches(req, res) {
+    return res.status(200).json(await getAllLaunches());
 }
-function httpaddNewlaunch(req, res) {
+ async function httpaddNewlaunch(req, res) {
 
 
     const launch = req.body;
@@ -13,39 +13,45 @@ function httpaddNewlaunch(req, res) {
             Error : 'data is incomplete'
         })
     }
-
-
     launch.launchDate = new Date(launch.launchDate);
     if (isNaN(launch.launchDate)) {
         return res.status(400).json({
             Error:'enter valid date'
         })
     }
-    addNewLaunch(launch);
-
+    await saveNewLaunch(launch);
     return res.status(201).json(launch);
 }
 
 async function httpAbortLaunch(req, res) {
-  const launchId = Number(req.params.id);
+    const launchId = Number(req.params.id);
 
-  const existsLaunch = await ifLaunchExists(launchId);
-  if (!existsLaunch) {
-    return res.status(404).json({
-      error: 'Launch not found',
-    });
-  }
+    try {
+        const existsLaunch = await ifLaunchExists(launchId);
+        
+        if (!existsLaunch) {
+            return res.status(404).json({
+                error: 'Launch not found',
+            });
+        }
 
-  const aborted = await abortedLaunch(launchId);
-  if (!aborted) {
-    return res.status(400).json({
-      error: 'Launch not aborted',
-    });
-  }
+        const aborted = await abortedLaunch(launchId);
 
-  return res.status(200).json({
-    ok: true,
-  });
+        if (!aborted) {
+            return res.status(400).json({
+                error: 'Failed to abort launch',
+            });
+        }
+
+        return res.status(200).json({
+            ok: true,
+        });
+    } catch (error) {
+        console.error('Error aborting launch:', error);
+        return res.status(500).json({
+            error: 'Internal server error',
+        });
+    }
 }
 
 

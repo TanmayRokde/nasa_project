@@ -8,7 +8,7 @@ const express = require('express');
 const app = express();
 
 const PlanetsRouter = require('./routes/planets/planets.routes');
-const { launchesRouter } = require('./routes/launches/launches.routes');
+const  {launchesRouter}  = require('./routes/launches/launches.routes');
 
 
 
